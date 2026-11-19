@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from taskboard import add_task, get_tasks, mark_done
+from taskboard import add_task, delete_task, get_tasks, mark_done
 
 
 class TaskboardTests(unittest.TestCase):
@@ -43,7 +43,31 @@ class TaskboardTests(unittest.TestCase):
         add_task("First", self.data_file)
         second = add_task("Second", self.data_file)
         self.assertEqual(second["id"], 2)
+    def test_delete_removes_only_matching_task(self):
+        add_task("First", self.data_file)
+        add_task("Second", self.data_file)
 
+        removed = delete_task(1, self.data_file)
+
+        self.assertEqual(removed["title"], "First")
+        self.assertEqual(
+            [task["id"] for task in get_tasks(self.data_file)],
+            [2]
+    )
+
+
+def test_delete_unknown_id_raises(self):
+    with self.assertRaisesRegex(ValueError, "Task #999 not found"):
+        delete_task(999, self.data_file)
+
+
+def test_delete_does_not_reuse_ids(self):
+    add_task("First", self.data_file)
+    delete_task(1, self.data_file)
+
+    new_task = add_task("Second", self.data_file)
+
+    self.assertEqual(new_task["id"], 2)
 
 if __name__ == "__main__":
     unittest.main()

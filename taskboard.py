@@ -47,6 +47,17 @@ def mark_done(task_id: int, data_file: Path = DEFAULT_DATA_FILE) -> dict:
             return task
     raise ValueError(f"Task #{task_id} not found")
 
+def delete_task(task_id: int, data_file: Path = DEFAULT_DATA_FILE) -> dict:
+    """Delete a task by ID, returning the deleted task."""
+    state = read_state(data_file)
+
+    for index, task in enumerate(state["tasks"]):
+        if task["id"] == task_id:
+            deleted = state["tasks"].pop(index)
+            write_state(state, data_file)
+            return deleted
+
+    raise ValueError(f"Task #{task_id} not found")
 
 # CONTRIBUTOR CHALLENGE #1:
 # Add delete_task(task_id, data_file), a "delete" CLI subcommand,
@@ -62,6 +73,8 @@ def main() -> None:
     subparsers.add_parser("list", help="Show all tasks")
     done_parser = subparsers.add_parser("done", help="Complete a task")
     done_parser.add_argument("id", type=int)
+    delete_parser = subparsers.add_parser("delete", help="Delete a task")
+    delete_parser.add_argument("id", type=int)
 
     args = parser.parse_args()
     try:
@@ -78,6 +91,9 @@ def main() -> None:
         elif args.command == "done":
             task = mark_done(args.id)
             print(f"Completed #{task['id']}: {task['title']}")
+        elif args.command == "delete":
+            task = delete_task(args.id)
+            print(f"Deleted #{task['id']}: {task['title']}")
     except ValueError as exc:
         parser.error(str(exc))
 
